@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compiler-Deduced Functor</title>
+    <link rel="stylesheet" type="text/css" href="whitepaper.css" />
+</head>
+<body>
+
+<h1>Compiler-Deduced Functor</h1>
+
+<p>
+    I've taken an interest in functional program over the past year or so, and, more specifically,
+    the sweet spot that balances functional with object-oriented.  As part of that, I've been looking at the
+    functional capabilities that have been added to what you might normally think of as imperative
+    languages.  C++ has had at least some form of functional programming for along time in its
+    ability to use function pointers and call operators.  Lambdas are a more recent addition to the language, and
+    I've been using them more frequently when I define my own APIs.
+</p>
+
+<p>
+    One of the first questions that crossed my mind was how you declare a lambda as a parameter to a function.
+    As it turns out, you really don't need to, and that's what this article is about.  The following is a, kinda silly,
+    function that filters a collection of structures based on a filter function you supply.  The interesting part of
+    this is the template FilterFunction declaration.  Using it means I didn't have to try to figure out what the
+    function signature should be.  The template allows client code to decide how it wants to represent a function-like
+    thing.
+</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><table><tr><td><pre style="margin: 0; line-height: 125%">1
+2
+3
+4
+5
+6
+7
+8</pre></td><td><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">template</span><span style="color: #333333">&lt;</span><span style="color: #008800; font-weight: bold">typename</span> FilterFunction<span style="color: #333333">&gt;</span>
+std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">dog_t</span><span style="color: #333333">&gt;</span> filterDogs(<span style="color: #008800; font-weight: bold">const</span> std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">dog_t</span><span style="color: #333333">&gt;</span> <span style="color: #333333">&amp;</span>dogs, FilterFunction filter) {
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">dog_t</span><span style="color: #333333">&gt;</span> result;
+
+    std<span style="color: #333333">::</span>copy_if(dogs.cbegin(), dogs.cend(), std<span style="color: #333333">::</span>back_inserter(result), filter);
+
+    <span style="color: #008800; font-weight: bold">return</span> result;
+}
+</pre></td></tr></table></div>
+
+<p>
+    The client code, following, defines the comparison functor:
+</p>
+<pre>
+[](const dog_t &dog) { return dog.isEskimo; }
+</pre>
+
+<p>
+    The compiler deduces what the template parameter FilterFunction is, based on this lambda definition, including
+    inferring the return type.
+</p>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><table><tr><td><pre style="margin: 0; line-height: 125%"> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></td><td><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">struct</span> <span style="color: #333399; font-weight: bold">dog_t</span> {
+    std<span style="color: #333333">::</span>string name;
+    <span style="color: #333399; font-weight: bold">bool</span> isEskimo;
+};
+
+<span style="color: #333399; font-weight: bold">int</span> <span style="color: #0066BB; font-weight: bold">main</span>() {
+    <span style="color: #008800; font-weight: bold">auto</span> eskimos <span style="color: #333333">=</span> filterDogs({{<span style="background-color: #fff0f0">&quot;Trixie&quot;</span>, <span style="color: #007020">false</span>},
+                               {<span style="background-color: #fff0f0">&quot;Shasta&quot;</span>, <span style="color: #007020">true</span>},
+                               {<span style="background-color: #fff0f0">&quot;Gracie&quot;</span>, <span style="color: #007020">true</span>}},
+                              [](<span style="color: #008800; font-weight: bold">const</span> <span style="color: #333399; font-weight: bold">dog_t</span> <span style="color: #333333">&amp;</span>dog) { <span style="color: #008800; font-weight: bold">return</span> dog.isEskimo; });
+
+    <span style="color: #008800; font-weight: bold">for</span> (<span style="color: #008800; font-weight: bold">const</span> <span style="color: #333399; font-weight: bold">dog_t</span> <span style="color: #333333">&amp;</span>eskimo <span style="color: #333333">:</span> eskimos) {
+        std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> eskimo.name <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+    }
+
+    <span style="color: #008800; font-weight: bold">return</span> <span style="color: #0000DD; font-weight: bold">0</span>;
+}
+</pre></td></tr></table></div>
+
+<p>
+    So, there you have it.  The more I use the later versions of C++, focusing on their FP capabilities, the more I have
+    come to respect them as tools in the toolbox.
+</p>
+
+</body>
+</html>
